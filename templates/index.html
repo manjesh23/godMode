@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ system_info.hostname }} godMode</title>
+    <style>
+      :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #34495e;
+        --accent-color: #3498db;
+        --text-color: #ecf0f1;
+        --border-color: #7f8c8d;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        background-color: var(--primary-color);
+        color: var(--text-color);
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        min-height: 100vh;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      h1 {
+        text-align: center;
+        margin: 20px 0 30px;
+        padding: 20px;
+      }
+
+      h1 img {
+        max-width: 400px;
+        height: auto;
+      }
+
+      .tab {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+
+      .tab button {
+        background-color: var(--secondary-color);
+        color: var(--text-color);
+        border: none;
+        padding: 12px 24px;
+        cursor: pointer;
+        border-radius: 4px;
+        transition: background-color 0.3s;
+        font-size: 16px;
+        min-width: 150px;
+      }
+
+      .tab button:hover {
+        background-color: var(--accent-color);
+      }
+
+      .tab button.active {
+        background-color: var(--accent-color);
+      }
+
+      .tabcontent {
+        display: none;
+        background-color: var(--secondary-color);
+        padding: 25px;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        margin-top: 20px;
+      }
+
+      .tabcontent.active {
+        display: block;
+      }
+
+      pre {
+        background-color: rgba(0, 0, 0, 0.2);
+        padding: 15px;
+        border-radius: 4px;
+        overflow-x: auto;
+        margin: 10px 0;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .log-container {
+        height: 500px;
+        overflow-y: auto;
+        background-color: rgba(0, 0, 0, 0.2);
+        padding: 15px;
+        border-radius: 4px;
+        margin: 10px 0;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      .system-info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 25px;
+        margin-top: 20px;
+      }
+
+      .info-card {
+        background-color: rgba(0, 0, 0, 0.2);
+        padding: 20px;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .info-card h3 {
+        margin-bottom: 15px;
+        color: var(--accent-color);
+        font-size: 18px;
+      }
+
+      .info-card p {
+        margin: 10px 0;
+        font-size: 15px;
+      }
+
+      h3 {
+        font-size: 20px;
+        margin: 20px 0 15px;
+        color: var(--accent-color);
+      }
+
+      .status-indicator {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 5px;
+      }
+
+      .status-up {
+        background-color: #2ecc71;
+      }
+
+      .status-down {
+        background-color: #e74c3c;
+      }
+
+      .metric-value {
+        font-size: 24px;
+        font-weight: bold;
+        color: var(--accent-color);
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          padding: 10px;
+        }
+
+        .system-info-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .tab button {
+          width: 100%;
+          margin-bottom: 5px;
+        }
+
+        .log-container {
+          height: 400px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>
+        <img
+          src="data:image/svg+xml;base64,{{ logo_base64 }}"
+          alt="{{ system_info.hostname }} Logo"
+        />
+      </h1>
+
+      <div class="tab">
+        <button class="tablinks active" onclick="openTab(event, 'SystemInfo')">
+          System Info
+        </button>
+        <button class="tablinks" onclick="openTab(event, 'Network')">
+          Network
+        </button>
+        <button class="tablinks" onclick="openTab(event, 'Services')">
+          Services
+        </button>
+        <button class="tablinks" onclick="openTab(event, 'SSL')">SSL</button>
+        <button class="tablinks" onclick="openTab(event, 'HA')">
+          HA & License
+        </button>
+        <button class="tablinks" onclick="openTab(event, 'Logs')">Logs</button>
+      </div>
+
+      <div id="SystemInfo" class="tabcontent active">
+        <div class="system-info-grid">
+          <div class="info-card">
+            <h3>System Information</h3>
+            <p>NetScaler Version: {{ system_info.nsversion }}</p>
+            <p>
+              NetScaler Time:
+              <span id="systime">{{ system_info.systime }}</span>
+            </p>
+            <p>NetScaler NSIP: {{ system_info.nsip }}</p>
+            <p>NetScaler Hostname: {{ system_info.hostname }}</p>
+          </div>
+          <div class="info-card">
+            <h3>Hardware Status</h3>
+            <p>
+              CPU Usage:
+              <span class="metric-value">{{ system_info.cpu_usage }}%</span>
+            </p>
+            <p>
+              Memory Usage:
+              <span class="metric-value">{{ system_info.memory_usage }}%</span>
+            </p>
+            <pre>{{ system_info.disk_usage_detailed }}</pre>
+          </div>
+          <div class="info-card">
+            <h3>System Stats</h3>
+            <pre>{{ system_info.system_stats }}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="Network" class="tabcontent">
+        <div class="system-info-grid">
+          <div class="info-card">
+            <h3>Network Interfaces</h3>
+            <pre>{{ system_info.interfaces }}</pre>
+          </div>
+          <div class="info-card">
+            <h3>VLAN Configuration</h3>
+            <pre>{{ system_info.vlan }}</pre>
+          </div>
+          <div class="info-card">
+            <h3>NSVLAN Configuration</h3>
+            <pre>{{ system_info.nsvlan }}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="Services" class="tabcontent">
+        <div class="system-info-grid">
+          <div class="info-card">
+            <h3>Load Balancing vServers</h3>
+            <pre>{{ system_info.lbvserver }}</pre>
+          </div>
+          <div class="info-card">
+            <h3>Content Switching vServers</h3>
+            <pre>{{ system_info.csvserver }}</pre>
+          </div>
+          <div class="info-card">
+            <h3>GSLB vServers</h3>
+            <pre>{{ system_info.gslbvserver }}</pre>
+          </div>
+          <div class="info-card">
+            <h3>Services</h3>
+            <pre>{{ system_info.services }}</pre>
+          </div>
+          <div class="info-card">
+            <h3>Service Groups</h3>
+            <pre>{{ system_info.servicegroups }}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="SSL" class="tabcontent">
+        <div class="system-info-grid">
+          <div class="info-card">
+            <h3>SSL Certificates</h3>
+            <pre>{{ system_info.ssl_cert }}</pre>
+          </div>
+          <div class="info-card">
+            <h3>SSL Statistics</h3>
+            <pre>{{ system_info.ssl_stats }}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="HA" class="tabcontent">
+        <div class="system-info-grid">
+          <div class="info-card">
+            <h3>High Availability Status</h3>
+            <pre>{{ system_info.ha_status }}</pre>
+          </div>
+          <div class="info-card">
+            <h3>License Information</h3>
+            <pre>{{ system_info.license }}</pre>
+          </div>
+          <div class="info-card">
+            <h3>Feature Status</h3>
+            <pre>{{ system_info.features }}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div id="Logs" class="tabcontent">
+        <h3>Real-Time CLI Command Output</h3>
+        <div id="cli-log-output" class="log-container"></div>
+        <h3>Real-Time GUI Command Output</h3>
+        <div id="gui-log-output" class="log-container"></div>
+      </div>
+    </div>
+
+    <script>
+      function openTab(evt, tabName) {
+          const tabcontent = document.getElementsByClassName("tabcontent");
+          const tablinks = document.getElementsByClassName("tablinks");
+
+          for (let i = 0; i < tabcontent.length; i++) {
+              tabcontent[i].classList.remove("active");
+          }
+
+          for (let i = 0; i < tablinks.length; i++) {
+              tablinks[i].classList.remove("active");
+          }
+
+          document.getElementById(tabName).classList.add("active");
+          evt.currentTarget.classList.add("active");
+      }
+
+      async function updateSystemInfo() {
+          try {
+              const response = await fetch('/system-info');
+              const data = await response.json();
+
+              document.getElementById('systime').textContent = data.systime;
+              document.getElementById('nsppe-pid').textContent = data.nsppe_pid;
+              document.getElementById('disk-usage').textContent = data.disk_usage;
+              document.getElementById('lbvserver').textContent = data.lbvserver;
+          } catch (error) {
+              console.error('Error updating system info:', error);
+          }
+      }
+
+      async function updateLogs() {
+          try {
+              const [cliResponse, guiResponse] = await Promise.all([
+                  fetch('/logs/CLI'),
+                  fetch('/logs/GUI')
+              ]);
+
+              const cliData = await cliResponse.text();
+              const guiData = await guiResponse.text();
+
+              const cliLogDiv = document.getElementById('cli-log-output');
+              const guiLogDiv = document.getElementById('gui-log-output');
+
+              cliLogDiv.innerHTML += cliData;
+              guiLogDiv.innerHTML += guiData;
+
+              cliLogDiv.scrollTop = cliLogDiv.scrollHeight;
+              guiLogDiv.scrollTop = guiLogDiv.scrollHeight;
+          } catch (error) {
+              console.error('Error updating logs:', error);
+          }
+      }
+
+      // Initial updates
+      updateSystemInfo();
+      updateLogs();
+
+      // Set intervals for updates
+      setInterval(updateSystemInfo, {{ update_interval }});
+      setInterval(updateLogs, {{ update_interval }});
+    </script>
+  </body>
+</html>
